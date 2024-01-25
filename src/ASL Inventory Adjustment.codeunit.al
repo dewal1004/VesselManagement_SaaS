@@ -252,6 +252,7 @@ codeunit 50110 "ASL Inventory Adjustment" implements "Inventory Adjustment"
         ItemLedgEntry.SetCurrentKey("Item No.", "Applied Entry to Adjust");
         ItemLedgEntry.SetRange("Item No.", Item."No.");
         ItemLedgEntry.SetRange("Applied Entry to Adjust", true);
+        ItemLedgEntry.SetFilter(ItemLedgEntry."Entry Type", '<>%1', ItemLedgEntry."Entry Type"::Transfer);
         if not ItemLedgEntry.FindSet() then
             exit;
 
