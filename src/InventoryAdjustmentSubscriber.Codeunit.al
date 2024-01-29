@@ -10,40 +10,49 @@ codeunit 50035 "InventoryAdjustmentSubscriber"
         if ItemLedgEntry."Item No." = SkipItem then
             exit;
         ItemLedgEntry.SetFilter(ItemLedgEntry."Entry Type", '<>%1', ItemLedgEntry."Entry Type"::Transfer);
-    end;       
-    
+    end;
+
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Inventory Adjustment", OnBeforeMakeMultiLevelAdjmt, '', true, true)]
     local procedure Adjustment(var IsHandled: Boolean)
     var
-        
         I: Integer;
         Adj: Codeunit "Inventory Adjustment Handler";
     begin
         // ASLInventAdJCost.MakeMultiLevelAdjmt();
         // IsHandled := True;
-        I := ++1;        
+        I := + +1;
+        SetAppliedEntrytoAdjustFalse();
     end;
 
-    local procedure ASLInvtAdjstCost()
+    local procedure SetAppliedEntrytoAdjustFalse()
+    //To make transfer entry appeared as adjusted 
     var
-        ASLInventAdJCost: Codeunit "ASL Inventory Adjustment";
+        ItemLE: Record "Item Ledger Entry";
+        TryItem: Label 'AG-001'; //DK-016, PK-0168
     begin
-        
+        ItemLE.SetCurrentKey("Item No.", "Entry Type", "Applied Entry to Adjust");
+        ItemLE.SetRange("Item No.",TryItem);
+        ItemLE.SetRange("Entry Type", ItemLE."Entry Type"::Transfer);
+        ItemLE.SetRange("Applied Entry to Adjust", true);
+        if ItemLE.FindSet() then begin
+            ItemLE.SetCurrentKey("Entry No.");
+            ItemLE.ModifyAll("Applied Entry to Adjust", false);
+        end;
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Inventory Adjustment", OnBeforeMakeSingleLevelAdjmt, '', true, true)]
     local procedure InvtAdjmtOnBeforeMakeSingleLevelAdjmt()
     var
-      I: Integer;
+        I: Integer;
     begin
-        I := ++1;
+        I := + +1;
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"ASL Inventory Adjustment", OnMakeMultiLevelAdjmtOnAfterMakeAdjmt, '', true, true)]
     local procedure MyProcedure()
     var
-      I: Integer;
+        I: Integer;
     begin
-        I := ++1;
+        I := + +1;
     end;
 }
