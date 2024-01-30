@@ -19,9 +19,10 @@ codeunit 50035 "InventoryAdjustmentSubscriber"
         Adj: Codeunit "Inventory Adjustment Handler";
     begin
         // ASLInventAdJCost.MakeMultiLevelAdjmt();
-        // IsHandled := True;
         I := + +1;
         SetAppliedEntrytoAdjustFalse();
+        TempMoveTransferredILE();
+        IsHandled := True;
     end;
 
     local procedure SetAppliedEntrytoAdjustFalse()
@@ -31,12 +32,29 @@ codeunit 50035 "InventoryAdjustmentSubscriber"
         TryItem: Label 'AG-001'; //DK-016, PK-0168
     begin
         ItemLE.SetCurrentKey("Item No.", "Entry Type", "Applied Entry to Adjust");
-        ItemLE.SetRange("Item No.",TryItem);
+        ItemLE.SetRange("Item No.", TryItem);
         ItemLE.SetRange("Entry Type", ItemLE."Entry Type"::Transfer);
         ItemLE.SetRange("Applied Entry to Adjust", true);
         if ItemLE.FindSet() then begin
             ItemLE.SetCurrentKey("Entry No.");
             ItemLE.ModifyAll("Applied Entry to Adjust", false);
+        end;
+    end;
+
+    local procedure TempMoveTransferredILE()
+    var
+        ILE: Record "Item Ledger Entry";
+        ASLILE: Record "ASL Item Ledger Entry Temp";
+    begin
+        ILE.SetCurrentKey("Entry Type");
+        if ILE.FindSet() then begin
+            Message('ILE.count');
+            repeat begin
+
+                ASLILE.Copy(ILE);
+            end until ILE.Next() = 0;
+
+            exit;
         end;
     end;
 
