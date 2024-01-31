@@ -10,8 +10,9 @@
             "startupObjectId": 795,
             "startupObjectType": "Report",
             "breakOnError": "All",
-            "launchBrowser": true,5
+            "launchBrowser": true,
             "enableLongRunningSqlStatements": true,
+            "schemaUpdateMode": "ForceSync",
             "enableSqlInformationDebugger": true
         }
     ]

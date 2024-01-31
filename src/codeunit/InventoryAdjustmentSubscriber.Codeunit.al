@@ -44,16 +44,14 @@ codeunit 50035 "InventoryAdjustmentSubscriber"
     local procedure TempMoveTransferredILE()
     var
         ILE: Record "Item Ledger Entry";
-        ASLILE: Record "ASL Item Ledger Entry Temp";
+        ASLILE: Record "ASL Item Ledger Entry Buffer";
     begin
         ILE.SetCurrentKey("Entry Type");
         if ILE.FindSet() then begin
-            Message('ILE.count');
-            repeat begin
-
-                ASLILE.Copy(ILE);
-            end until ILE.Next() = 0;
-
+            Message('%1', ILE.Count);
+            ASLILE.Copy(ILE);
+            // repeat begin
+            // end until ILE.Next() = 0;
             exit;
         end;
     end;

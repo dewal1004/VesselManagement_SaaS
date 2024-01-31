@@ -23,12 +23,13 @@ using Microsoft.Sales.Customer;
 using Microsoft.Sales.Document;
 using Microsoft.Utilities;
 
-table 50132 "ASL Item Ledger Entry Temp"
+table 50132 "ASL Item Ledger Entry Buffer"
 {
     Caption = 'Item Ledger Entry';
     DrillDownPageID = "Item Ledger Entries";
     LookupPageID = "Item Ledger Entries";
     Permissions = TableData "Item Ledger Entry" = rimd;
+    DataClassification = AccountData;
 
     fields
     {
@@ -213,6 +214,7 @@ table 50132 "ASL Item Ledger Entry Temp"
 
             trigger OnLookup()
             begin
+                // Rec.ShowDimensions();
             end;
         }
         field(481; "Shortcut Dimension 3 Code"; Code[20])
@@ -393,7 +395,7 @@ table 50132 "ASL Item Ledger Entry Temp"
         }
         field(5806; "Cost Amount (Expected) (ACY)"; Decimal)
         {
-            AutoFormatExpression = GetCurrencyCode();
+            // AutoFormatExpression = GetCurrencyCode();
             AutoFormatType = 1;
             CalcFormula = sum("Value Entry"."Cost Amount (Expected) (ACY)" where("Item Ledger Entry No." = field("Entry No.")));
             Caption = 'Cost Amount (Expected) (ACY)';
@@ -402,7 +404,7 @@ table 50132 "ASL Item Ledger Entry Temp"
         }
         field(5807; "Cost Amount (Actual) (ACY)"; Decimal)
         {
-            AutoFormatExpression = GetCurrencyCode();
+            // AutoFormatExpression = GetCurrencyCode();
             AutoFormatType = 1;
             CalcFormula = sum("Value Entry"."Cost Amount (Actual) (ACY)" where("Item Ledger Entry No." = field("Entry No.")));
             Caption = 'Cost Amount (Actual) (ACY)';
@@ -411,7 +413,7 @@ table 50132 "ASL Item Ledger Entry Temp"
         }
         field(5808; "Cost Amount (Non-Invtbl.)(ACY)"; Decimal)
         {
-            AutoFormatExpression = GetCurrencyCode();
+            // AutoFormatExpression = GetCurrencyCode();
             AutoFormatType = 1;
             CalcFormula = sum("Value Entry"."Cost Amount (Non-Invtbl.)(ACY)" where("Item Ledger Entry No." = field("Entry No.")));
             Caption = 'Cost Amount (Non-Invtbl.)(ACY)';
@@ -594,99 +596,7 @@ table 50132 "ASL Item Ledger Entry Temp"
         UseItemTrackingLinesPageErr: Label 'You must use form %1 to enter %2, if item tracking is used.', Comment = '%1 - page caption, %2 - field caption';
         IsNotOnInventoryErr: Label 'You have insufficient quantity of Item %1 on inventory.';
 
-    procedure GetCurrencyCode(): Code[10]
-    begin
-        if not GLSetupRead then begin
-            GLSetup.Get();
-            GLSetupRead := true;
-        end;
-        exit(GLSetup."Additional Reporting Currency");
-    end;
 
-    procedure GetLastEntryNo(): Integer;
-    var
-        FindRecordManagement: Codeunit "Find Record Management";
-    begin
-        exit(FindRecordManagement.GetLastEntryIntFieldValue(Rec, FieldNo("Entry No.")))
-    end;
-
-    
-    procedure SetAppliedEntryToAdjust(AppliedEntryToAdjust: Boolean)
-    begin
-        if "Applied Entry to Adjust" <> AppliedEntryToAdjust then begin
-            "Applied Entry to Adjust" := AppliedEntryToAdjust;
-            Modify();
-        end;
-    end;
-
-    procedure SetAvgTransCompletelyInvoiced(): Boolean
-    var
-        ItemApplnEntry: Record "Item Application Entry";
-        InbndItemLedgEntry: Record "Item Ledger Entry";
-        CompletelyInvoiced: Boolean;
-    begin
-        if "Entry Type" <> "Entry Type"::Transfer then
-            exit(false);
-
-        ItemApplnEntry.SetCurrentKey("Item Ledger Entry No.");
-        ItemApplnEntry.SetRange("Item Ledger Entry No.", "Entry No.");
-        ItemApplnEntry.Find('-');
-        if not "Completely Invoiced" then begin
-            CompletelyInvoiced := true;
-            repeat
-                InbndItemLedgEntry.Get(ItemApplnEntry."Inbound Item Entry No.");
-                if not InbndItemLedgEntry."Completely Invoiced" then
-                    CompletelyInvoiced := false;
-            until ItemApplnEntry.Next() = 0;
-
-            if CompletelyInvoiced then begin
-                SetCompletelyInvoiced();
-                exit(true);
-            end;
-        end;
-        exit(false);
-    end;
-
-    procedure SetCompletelyInvoiced()
-    begin
-        if not "Completely Invoiced" then begin
-            "Completely Invoiced" := true;
-            Modify();
-        end;
-    end;
-
-    procedure AppliedEntryToAdjustExists(ItemNo: Code[20]): Boolean
-    begin
-        Reset();
-        SetCurrentKey("Item No.", "Applied Entry to Adjust");
-        SetRange("Item No.", ItemNo);
-        SetRange("Applied Entry to Adjust", true);
-        exit(Find('-'));
-    end;
-
-    procedure IsOutbndConsump(): Boolean
-    begin
-        exit(("Entry Type" = "Entry Type"::Consumption) and not Positive);
-    end;
-
-    procedure IsExactCostReversingPurchase(): Boolean
-    begin
-        exit(
-          ("Applies-to Entry" <> 0) and
-          ("Entry Type" = "Entry Type"::Purchase) and
-          ("Invoiced Quantity" < 0));
-    end;
-
-    procedure IsExactCostReversingOutput(): Boolean
-    begin
-        exit(
-          ("Applies-to Entry" <> 0) and
-          ("Entry Type" in ["Entry Type"::Output, "Entry Type"::"Assembly Output"]) and
-          ("Invoiced Quantity" < 0));
-    end;
-
-     
-    
     [IntegrationEvent(false, false)]
     local procedure OnAfterClearTrackingFilter(var ItemLedgerEntry: Record "Item Ledger Entry")
     begin
