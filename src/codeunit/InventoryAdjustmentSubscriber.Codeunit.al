@@ -45,15 +45,21 @@ codeunit 50035 "InventoryAdjustmentSubscriber"
     var
         ILE: Record "Item Ledger Entry";
         ASLILE: Record "ASL Item Ledger Entry Buffer";
+        payT: Record "Payment Method";
+        ASLPayT: Record "Payment Terms" temporary;
     begin
         ILE.SetCurrentKey("Entry Type");
         if ILE.FindSet() then begin
-            Message('%1', ILE.Count);
-            ASLILE.Copy(ILE);
+            // Message('%1', ILE.Count);
+            // ASLILE.Copy(ILE);
             // repeat begin
             // end until ILE.Next() = 0;
-            exit;
+            // exit;
         end;
+
+        ASLPayT.SetRange("Discount %");
+        ASLPayT.TransferFields(payT);
+        Message('%1', payT.Count);
     end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Inventory Adjustment", OnBeforeMakeSingleLevelAdjmt, '', true, true)]
